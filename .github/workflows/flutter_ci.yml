@@ -1,0 +1,45 @@
+name: Haber Okuyucu CI/CD Otomasyonu
+
+# 1. TETİKLEYİCİ: Bu robot ne zaman çalışsın?
+# "main" veya "master" dalına kod yüklendiğinde otomatik başlar.
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+# 2. GÖREVLER: Robot ne yapacak?
+jobs:
+  build:
+    # GitHub bize ücretsiz, sanal bir Ubuntu Linux bilgisayar tahsis ediyor
+    runs-on: ubuntu-latest
+
+    steps:
+      # Adım A: Yazdığın kodları bu sanal bilgisayara kopyalar
+      - name: Kodu Klonla
+        uses: actions/checkout@v3
+
+      # Adım B: Android derlemesi için Java kurmak zorundadır
+      - name: Java JDK 17 Kurulumu
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # Adım C: Sanal bilgisayara Flutter motorunu kurar
+      - name: Flutter Ortamını Hazırla
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Adım D: pubspec.yaml içindeki paketleri (riverpod, dio vb.) indirir
+      - name: Paketleri İndir
+        run: flutter pub get
+
+      # Adım E: Hata var mı diye otomatik testleri çalıştırır
+      - name: Testleri Çalıştır
+        run: flutter test
+
+      # Adım F: FİNAL - UYGULAMAYI DERLER!
+      - name: AAB Paketi Üret (Play Store İçin)
+        run: flutter build appbundle --release
