@@ -36,25 +36,31 @@ android {
         versionName = flutter.versionName
     }
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
-            val storeFilePath = keystoreProperties.getProperty("storeFile")
-            if (storeFilePath != null) {
-                storeFile = file(storeFilePath)
+        // EĞER ŞİFRE DOSYASI VARSA (Yani senin bilgisayarındaysa) RELEASE İMZASINI OLUŞTUR
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                val storeFilePath = keystoreProperties.getProperty("storeFile")
+                if (storeFilePath != null) {
+                    storeFile = file(storeFilePath)
+                }
+                storePassword = keystoreProperties.getProperty("storePassword")
             }
-            storePassword = keystoreProperties.getProperty("storePassword")
         }
         
-        // Emülatörde normal F5 ile test yapabilmen için gereken varsayılan blok
         getByName("debug") {
-            // İçi boş kalabilir, Flutter arka planda bunu kendi test şifresiyle otomatik doldurur.
+            // Varsayılan test imzası
         }
     }
     buildTypes {
         getByName("release") {
-            // Diğer ayarların (minifyEnabled vs.) varsa kalsın, sadece bu satırı ekle/değiştir:
-            signingConfig = signingConfigs.getByName("release")
+            // EĞER ŞİFRE DOSYASI VARSA GERÇEK İMZAYI, YOKSA TEST İMZASINI KULLAN
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
